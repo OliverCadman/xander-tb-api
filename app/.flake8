@@ -4,4 +4,5 @@ exclude =
     __pycache__,
     manage.py,
     ./app/settings.py
-    ./app/manage.py
+    ./app/manage.py,
+    ./core
