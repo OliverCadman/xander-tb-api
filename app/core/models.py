@@ -80,6 +80,11 @@ class FullOrder(AbstractTBData):
 
 class TodaysOrder(AbstractTBData):
 
+    dispatch_status = models.CharField(max_length=30, null=True, blank=True)
+    dispatch_date = models.DateTimeField(null=True, blank=True)
+    delivery_status = models.CharField(max_length=30, null=True, blank=True)
+    delivery_date = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return self.order_number
 
