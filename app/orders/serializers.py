@@ -59,7 +59,7 @@ class NullOrderSerializer(ModelSerializer):
         list_serializer_class = BulkCreateOrderSerializer
 
     def create(self, validated_data):
-        instance = TodaysOrder(**validated_data)
+        instance = NullOrder(**validated_data)
 
         if isinstance(self._kwargs['data'], dict):
             instance.save()
