@@ -1,0 +1,10 @@
+{
+    "python.autoComplete.extraPaths": [
+        "."
+    ],
+    "python.analysis.extraPaths": [
+        "."
+    ],
+    // "terminal.integrated.defaultProfile.linux": "sh",
+    // "git.enabled": true
+}
