@@ -24,7 +24,7 @@ class UserModelTests(TestCase):
 
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
-    
+
     def test_new_users_email_normalized(self):
         """Test that a new user's email is normalized."""
 
@@ -42,7 +42,7 @@ class UserModelTests(TestCase):
             )
 
             self.assertEqual(user.email, expected)
-        
+
     def test_new_user_without_email_raises_error(self):
         """Test that creating a user without an email raises an error."""
 
@@ -51,7 +51,7 @@ class UserModelTests(TestCase):
                 email='',
                 password='testpass123'
             )
-    
+
     def test_create_superuser_is_successful(self):
         """Test creating a superuser"""
 
@@ -83,7 +83,6 @@ class ToothbrushOrderModelTests(TestCase):
             'delivery_status': 'Test Delivery Status',
             'delivery_date': utc.localize(datetime.datetime.now())
         }
-        
 
     def test_create_full_order_model(self):
         """Tests creating a full order."""
@@ -92,6 +91,5 @@ class ToothbrushOrderModelTests(TestCase):
             **self.order_details
         )
 
-        self.assertEqual(full_order.__str__(), self.order_details['order_number'])
-    
-    
+        self.assertEqual(full_order.__str__(),
+                         self.order_details['order_number'])

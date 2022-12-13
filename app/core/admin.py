@@ -49,6 +49,5 @@ class UserAdmin(BaseUserAdmin):
 
     exclude = ['username', 'first_name', 'last_name', 'date_joined']
 
-# Register your models here.
-admin.site.register(User, UserAdmin)
 
+admin.site.register(User, UserAdmin)
