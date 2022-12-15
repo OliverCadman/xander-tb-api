@@ -8,6 +8,8 @@ from core.models import FullOrder, TodaysOrder, NullOrder
 from rest_framework.response import Response
 from rest_framework import status
 
+import json
+
 
 class FullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = FullOrderSerializer
@@ -19,7 +21,7 @@ class FullOrderViewSet(viewsets.ModelViewSet):
         return super(FullOrderViewSet, self).get_serializer(*args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=json.loads(request.data))
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -31,7 +33,7 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
     queryset = TodaysOrder.objects.all()
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=json.loads(request.data))
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
@@ -50,7 +52,7 @@ class NullOrderViewSet(viewsets.ModelViewSet):
     queryset = NullOrder.objects.all()
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=json.loads(request.data))
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(

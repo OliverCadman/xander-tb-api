@@ -17,8 +17,17 @@ import json
 
 from core.models import FullOrder, NullOrder, TodaysOrder
 
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    raise TypeError("Type %s not serializable" % type(obj))
+
 # Define URL endpoints
 # GET_ORDER_URL = reverse('orders:get')
+
 
 FULL_ORDER_URL = reverse('orders:full_orders-list')
 TODAYS_ORDER_URL = reverse('orders:todays_orders-list')
@@ -26,6 +35,8 @@ NULL_ORDER_URL = reverse('orders:null_orders-list')
 
 # Helper variable
 time_now = pytz.utc.localize(datetime.datetime.now())
+
+json_time = json_serial(pytz.utc.localize(datetime.datetime.now()))
 
 
 def create_order(type_order, **params):
@@ -58,14 +69,6 @@ def create_order(type_order, **params):
         order = NullOrder.objects.create(**defaults)
 
     return order
-
-
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-
-    if isinstance(obj, (datetime.datetime, datetime.date)):
-        return obj.isoformat()
-    raise TypeError("Type %s not serializable" % type(obj))
 
 
 class PublicOrderAPITests(TestCase):
@@ -194,8 +197,6 @@ class PublicOrderAPITests(TestCase):
 
         t1 = perf_counter()
 
-        json_time = json_serial(pytz.utc.localize(datetime.datetime.now()))
-
         data = [
             {
                 "order_number": f"BRU0000{x}",
@@ -308,3 +309,13 @@ class PublicOrderAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_full_order_insertion_with_json_loads(self):
+
+        self.payload['order_date'] = json_time
+        self.payload['dispatch_date'] = json_time
+        self.payload['delivery_date'] = json_time
+        json_data = json.dumps(self.payload)
+
+        res = self.client.post(FULL_ORDER_URL, json.loads(json_data))
+        print(res)
