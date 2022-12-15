@@ -118,7 +118,7 @@ class PublicOrderAPITests(TestCase):
     def test_bulk_full_order_creation_with_list_serializer(self):
         """Test the performance of a bulk full-order creation"""
 
-        TEST_SIZE = 3000
+        TEST_SIZE = 3
 
         t1 = perf_counter()
 
@@ -233,7 +233,7 @@ class PublicOrderAPITests(TestCase):
         """
         Test bulk creation of null orders
         """
-        TEST_SIZE = 3000
+        TEST_SIZE = 3
 
         t1 = perf_counter()
 
@@ -316,6 +316,8 @@ class PublicOrderAPITests(TestCase):
         self.payload['dispatch_date'] = json_time
         self.payload['delivery_date'] = json_time
         json_data = json.dumps(self.payload)
+
+        print('JSON DATA', json_data)
 
         res = self.client.post(FULL_ORDER_URL, json.loads(json_data))
         print(res)
