@@ -1,6 +1,5 @@
 """Views for Orders API"""
 
-from rest_framework.generics import CreateAPIView
 from rest_framework import viewsets
 from orders.serializers import (FullOrderSerializer,
                                 TodaysOrderSerializer,
@@ -18,7 +17,7 @@ class FullOrderViewSet(viewsets.ModelViewSet):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
         return super(FullOrderViewSet, self).get_serializer(*args, **kwargs)
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -38,7 +37,6 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data, status.HTTP_201_CREATED
         )
-        
 
     def get_serializer(self, *args, **kwargs):
         if isinstance(kwargs.get("data", {}), list):
@@ -58,7 +56,6 @@ class NullOrderViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data, status.HTTP_201_CREATED
         )
-
 
     def get_serializer(self, *args, **kwargs):
         if isinstance(kwargs.get("data", {}), list):

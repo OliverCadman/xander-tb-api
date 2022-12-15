@@ -16,5 +16,5 @@ router.register('todays_orders', TodaysOrderViewSet, basename='todays_orders')
 router.register('null_orders', NullOrderViewSet, basename='null_orders')
 
 urlpatterns = [
-    path('', include(router.urls)) 
+    path('', include(router.urls))
 ]
