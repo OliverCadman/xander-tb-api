@@ -17,9 +17,9 @@ import json
 # Define URL endpoints
 # GET_ORDER_URL = reverse('orders:get')
 
-CREATE_FULL_ORDER_URL = reverse('orders:create_full_order')
-CREATE_TODAYS_ORDER_URL = reverse('orders:create_todays_order')
-CREATE_NULL_ORDER_URL = reverse('orders:create_null_order')
+CREATE_FULL_ORDER_URL = reverse('orders:full_orders-list')
+CREATE_TODAYS_ORDER_URL = reverse('orders:todays_orders-list')
+CREATE_NULL_ORDER_URL = reverse('orders:null_orders-list')
 
 # Helper variable
 time_now = pytz.utc.localize(datetime.datetime.now())
