@@ -19,7 +19,6 @@ class FullOrderViewSet(viewsets.ModelViewSet):
         return super(FullOrderViewSet, self).get_serializer(*args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-        print('REQUEST DATAAAAA:   ', request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
