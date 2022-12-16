@@ -1,34 +1,64 @@
 """Views for Orders API"""
 
-from rest_framework.generics import CreateAPIView
+from rest_framework import viewsets
 from orders.serializers import (FullOrderSerializer,
                                 TodaysOrderSerializer,
                                 NullOrderSerializer)
+from core.models import FullOrder, TodaysOrder, NullOrder
+from rest_framework.response import Response
+from rest_framework import status
 
 
-class FullOrderCreateView(CreateAPIView):
+class FullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = FullOrderSerializer
+    queryset = FullOrder.objects.all()
 
     def get_serializer(self, *args, **kwargs):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
-        return super(FullOrderCreateView, self).get_serializer(*args, **kwargs)
+        return super(FullOrderViewSet, self).get_serializer(*args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        print('REQUEST DATAAAAA:   ', request.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status.HTTP_201_CREATED)
 
 
-class TodaysOrderCreateView(CreateAPIView):
+class TodaysOrderViewSet(viewsets.ModelViewSet):
     serializer_class = TodaysOrderSerializer
+    queryset = TodaysOrder.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data, status.HTTP_201_CREATED
+        )
 
     def get_serializer(self, *args, **kwargs):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
-        return super(TodaysOrderCreateView, self).get_serializer(
+        return super(TodaysOrderViewSet, self).get_serializer(
             *args, **kwargs)
 
 
-class NullOrderCreateView(CreateAPIView):
+class NullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = NullOrderSerializer
+    queryset = NullOrder.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data, status.HTTP_201_CREATED
+        )
 
     def get_serializer(self, *args, **kwargs):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
-        return super(NullOrderCreateView, self).get_serializer(*args, **kwargs)
+        return super(NullOrderViewSet, self).get_serializer(*args, **kwargs)

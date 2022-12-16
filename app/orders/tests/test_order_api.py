@@ -6,23 +6,16 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from orders.serializers import (FullOrderSerializer, NullOrderSerializer,
+                                TodaysOrderSerializer)
+
 import pytz
 import datetime
 from time import perf_counter
 
-from core.models import FullOrder
-
 import json
 
-# Define URL endpoints
-# GET_ORDER_URL = reverse('orders:get')
-
-CREATE_FULL_ORDER_URL = reverse('orders:create_full_order')
-CREATE_TODAYS_ORDER_URL = reverse('orders:create_todays_order')
-CREATE_NULL_ORDER_URL = reverse('orders:create_null_order')
-
-# Helper variable
-time_now = pytz.utc.localize(datetime.datetime.now())
+from core.models import FullOrder, NullOrder, TodaysOrder
 
 
 def json_serial(obj):
@@ -31,6 +24,51 @@ def json_serial(obj):
     if isinstance(obj, (datetime.datetime, datetime.date)):
         return obj.isoformat()
     raise TypeError("Type %s not serializable" % type(obj))
+
+# Define URL endpoints
+# GET_ORDER_URL = reverse('orders:get')
+
+
+FULL_ORDER_URL = reverse('orders:full_orders-list')
+TODAYS_ORDER_URL = reverse('orders:todays_orders-list')
+NULL_ORDER_URL = reverse('orders:null_orders-list')
+
+# Helper variable
+time_now = pytz.utc.localize(datetime.datetime.now())
+
+json_time = json_serial(pytz.utc.localize(datetime.datetime.now()))
+
+
+def create_order(type_order, **params):
+    """Creates either a FUll Order, Null Order or Todays Order"""
+
+    defaults = {
+        "order_number": "BRU00001",
+        "toothbrush_type": "Test Toothbrush",
+        "order_date": time_now,
+        "customer_age": 20,
+        "order_quantity": 5,
+        "delivery_postcode": "Test Postcode",
+        "billing_postcode": "Test Postcode",
+        "is_first": True,
+        "dispatch_status": "Test Dispatch Status",
+        "dispatch_date": time_now,
+        "delivery_status": "Test Delivery Status",
+        "delivery_date": time_now
+    }
+
+    defaults.update(params)
+
+    order = None
+
+    if type_order == 'Full Order':
+        order = FullOrder.objects.create(**defaults)
+    elif type_order == 'Todays Order':
+        order = TodaysOrder.objects.create(**defaults)
+    else:
+        order = NullOrder.objects.create(**defaults)
+
+    return order
 
 
 class PublicOrderAPITests(TestCase):
@@ -54,10 +92,12 @@ class PublicOrderAPITests(TestCase):
             "delivery_date": time_now
         }
 
+        self.order_number2 = 'BRU00002'
+
     def test_create_order_success(self):
         """Test creating an order is successful"""
 
-        res = self.client.post(CREATE_FULL_ORDER_URL, self.payload)
+        res = self.client.post(FULL_ORDER_URL, self.payload)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         order = FullOrder.objects.get(
@@ -71,14 +111,14 @@ class PublicOrderAPITests(TestCase):
         """
         self.payload['dispatch_status'] = ''
 
-        res = self.client.post(CREATE_FULL_ORDER_URL, self.payload)
+        res = self.client.post(FULL_ORDER_URL, self.payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_bulk_full_order_creation_with_list_serializer(self):
         """Test the performance of a bulk full-order creation"""
 
-        TEST_SIZE = 3000
+        TEST_SIZE = 3
 
         t1 = perf_counter()
 
@@ -103,7 +143,7 @@ class PublicOrderAPITests(TestCase):
         ]
 
         res = self.client.post(
-            CREATE_FULL_ORDER_URL,
+            FULL_ORDER_URL,
             data=json.dumps(data),
             content_type='application/json'
         )
@@ -117,7 +157,7 @@ class PublicOrderAPITests(TestCase):
     def test_todays_order_creation(self):
         """Test posting to create_todays_order endpoint is successful"""
         res = self.client.post(
-            CREATE_TODAYS_ORDER_URL,
+            TODAYS_ORDER_URL,
             self.payload
         )
 
@@ -142,7 +182,7 @@ class PublicOrderAPITests(TestCase):
                 del self.payload[i]
 
         res = self.client.post(
-            CREATE_TODAYS_ORDER_URL,
+            TODAYS_ORDER_URL,
             self.payload
         )
 
@@ -156,8 +196,6 @@ class PublicOrderAPITests(TestCase):
         TEST_SIZE = 3000
 
         t1 = perf_counter()
-
-        json_time = json_serial(pytz.utc.localize(datetime.datetime.now()))
 
         data = [
             {
@@ -178,7 +216,7 @@ class PublicOrderAPITests(TestCase):
         ]
 
         res = self.client.post(
-            CREATE_TODAYS_ORDER_URL,
+            TODAYS_ORDER_URL,
             data=json.dumps(data),
             content_type='application/json'
         )
@@ -195,7 +233,7 @@ class PublicOrderAPITests(TestCase):
         """
         Test bulk creation of null orders
         """
-        TEST_SIZE = 3000
+        TEST_SIZE = 3
 
         t1 = perf_counter()
 
@@ -216,7 +254,7 @@ class PublicOrderAPITests(TestCase):
         ]
 
         res = self.client.post(
-            CREATE_NULL_ORDER_URL,
+            NULL_ORDER_URL,
             data=json.dumps(data),
             content_type='application/json'
         )
@@ -227,3 +265,59 @@ class PublicOrderAPITests(TestCase):
         t2 = perf_counter()
 
         print(f"Null order bulk creation took {t2 - t1} seconds to complete.")
+
+    def test_get_full_orders(self):
+        """Test retrieving a list of full orders."""
+
+        create_order('Full Order')
+        create_order('Full Order', order_number=self.order_number2)
+
+        res = self.client.get(FULL_ORDER_URL)
+
+        all_full_orders = FullOrder.objects.all()
+        serializer = FullOrderSerializer(all_full_orders, many=True)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_get_null_orders(self):
+        """Test retrieving a list of null orders."""
+
+        create_order('Null Order')
+        create_order('Null Order', order_number=self.order_number2,
+                     dispatch_status=None)
+
+        res = self.client.get(NULL_ORDER_URL)
+
+        all_null_orders = NullOrder.objects.all()
+        serializer = NullOrderSerializer(all_null_orders, many=True)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_get_todays_orders(self):
+        """Test retrieving a list of todays orders."""
+
+        create_order('Todays Order')
+        create_order('Todays Order', order_number=self.order_number2,
+                     dispatch_status=None)
+
+        res = self.client.get(TODAYS_ORDER_URL)
+
+        all_todays_orders = TodaysOrder.objects.all()
+        serializer = TodaysOrderSerializer(all_todays_orders, many=True)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_full_order_insertion_with_json_loads(self):
+
+        self.payload['order_date'] = json_time
+        self.payload['dispatch_date'] = json_time
+        self.payload['delivery_date'] = json_time
+        json_data = json.dumps(self.payload)
+
+        print('JSON DATA', json_data)
+
+        res = self.client.post(FULL_ORDER_URL, json.loads(json_data))
+        print(res)
