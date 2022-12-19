@@ -33,13 +33,16 @@ class FullOrderSerializer(ModelSerializer):
             instance.save()
 
         return instance
+    
+    
 
 
 class TodaysOrderSerializer(ModelSerializer):
 
     class Meta:
         model = TodaysOrder
-        exclude = ('id',)
+        fields = '__all__'
+        read_only_fields = ('id',)
         list_serializer_class = BulkCreateOrderSerializer
 
     def create(self, validated_data):

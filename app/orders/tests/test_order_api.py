@@ -18,6 +18,15 @@ import json
 from core.models import FullOrder, NullOrder, TodaysOrder
 
 
+def detail_url(order_type, order_id, filtered=None):
+    """Create and return a recipe detail URL."""
+
+    if not filtered:
+        return reverse(f'orders:{order_type}-detail', args=[order_id])
+    
+    return reverse(f'orders:{order_type}-detail', kwargs={'pk': order_id, 'filtered': True})
+
+
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
 
@@ -317,7 +326,130 @@ class PublicOrderAPITests(TestCase):
         self.payload['delivery_date'] = json_time
         json_data = json.dumps(self.payload)
 
-        print('JSON DATA', json_data)
-
         res = self.client.post(FULL_ORDER_URL, json.loads(json_data))
-        print(res)
+    
+    def test_get_null_orders(self):
+        """Test getting only null orders from DB"""
+
+        # Objects with complete data
+        for x in range(1, 10):
+            TodaysOrder.objects.create(
+                order_number=f'BRU00000{x}',
+                order_date=json_time,
+                toothbrush_type='Test Toothbrush',
+                customer_age=20,
+                order_quantity=5,
+                delivery_postcode='Test Postcode',
+                billing_postcode='Test Postcode',
+                is_first=True,
+                dispatch_status='Test Dispatch Status',
+                dispatch_date=json_time,
+                delivery_status='Test Delivery Status',
+                delivery_date=json_time
+            )
+    
+        # Objects with null data
+        for x in range(10, 20):
+            TodaysOrder.objects.create(
+                order_number=f'BRU00000{x}',
+                order_date=json_time,
+                toothbrush_type='Test Toothbrush',
+                customer_age=20,
+                order_quantity=5,
+                delivery_postcode='Test Postcode',
+                billing_postcode='Test Postcode',
+                is_first=True,
+                dispatch_status='Test Dispatch Status',
+                dispatch_date=None,
+                delivery_status=None,
+                delivery_date=None
+            )
+        
+
+        url = reverse('orders:todays_orders-list')
+
+        res = self.client.get(url, data={'filter_by_null': True}, format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        queryset = TodaysOrder.objects.filter(delivery_status=None)
+
+        serializer = TodaysOrderSerializer(queryset, many=True)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_bulk_order_update(self):
+        """Test bulk update of orders."""
+
+        COMPLETE_ORDER_SIZE = 10
+        NULL_ORDER_SIZE = 10
+
+        complete_orders = []
+        null_orders = []
+
+        for x in range(1, 10):
+            complete_orders.append(
+                TodaysOrder.objects.create(
+                    order_number=f'BRU00000{x}',
+                    order_date=json_time,
+                    customer_age=20,
+                    order_quantity=5,
+                    delivery_postcode='Test Postcode',
+                    billing_postcode='Test Postcode',
+                    is_first=True,
+                    dispatch_status='Test Dispatch Status',
+                    dispatch_date=json_time,
+                    delivery_status='Test Delivery Status',
+                    delivery_date=json_time
+                )
+            )
+        
+        for x in range(10, 20):
+            null_orders.append(
+                TodaysOrder.objects.create(
+                    order_number=f'BRU00000{x}',
+                    order_date=json_time,
+                    customer_age=20,
+                    order_quantity=5,
+                    delivery_postcode='Test Postcode',
+                    billing_postcode='Test Postcode',
+                    is_first=True,
+                    dispatch_status='Test Dispatch Status',
+                    dispatch_date=None,
+                    delivery_status=None,
+                    delivery_date=None
+                )
+            )
+
+        get_null_orders_url = reverse('orders:todays_orders-list')
+        todaysorders_queryset = self.client.get(get_null_orders_url, data={
+            'filter_by_null': True
+        })
+
+        todaysorders_data = todaysorders_queryset.data
+
+        for d in todaysorders_data:
+            for k, v in d.items():
+                if k == 'id':
+                    test_url = detail_url(
+                        'todays_orders',
+                        v
+                    )
+
+                    payload = {
+                        'dispatch_date': json_time,
+                        'delivery_status': 'TEST PATCH DELIVERY STATUS',
+                        'delivery_date': json_time
+                    }
+
+                    res = self.client.patch(
+                        test_url,
+                        data=json.dumps(payload),
+                        content_type='application/json',
+                        
+                    )
+        
+                    self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        no_null_queryset = TodaysOrder.objects.filter(
+            dispatch_date=None, delivery_status=None, delivery_date=None)
+        
+        self.assertEqual(len(no_null_queryset), 0)

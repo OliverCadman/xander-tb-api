@@ -43,6 +43,21 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
             kwargs["many"] = True
         return super(TodaysOrderViewSet, self).get_serializer(
             *args, **kwargs)
+    
+    def get_queryset(self):
+        """
+        Return Todays Order objects with null values,
+        if 'filter_by_null' specified in query params.
+        """
+
+        queryset = self.queryset
+
+        if 'filter_by_null' in self.request.GET:
+            return queryset.filter(
+                delivery_status=None
+            )
+        return queryset
+    
 
 
 class NullOrderViewSet(viewsets.ModelViewSet):
