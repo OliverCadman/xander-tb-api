@@ -8,6 +8,8 @@ from core.models import FullOrder, TodaysOrder, NullOrder
 from rest_framework.response import Response
 from rest_framework import status
 
+from rest_framework.decorators import action
+
 
 class FullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = FullOrderSerializer
@@ -76,3 +78,12 @@ class NullOrderViewSet(viewsets.ModelViewSet):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
         return super(NullOrderViewSet, self).get_serializer(*args, **kwargs)
+    
+    @action(methods=['DELETE'], detail=False)
+    def delete(self, request):
+        queryset = self.queryset
+        queryset.delete()
+
+        return Response(
+            status.HTTP_204_NO_CONTENT
+        )
