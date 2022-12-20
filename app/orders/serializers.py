@@ -6,6 +6,8 @@ from core.models import FullOrder, TodaysOrder, NullOrder
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
+import datetime
+
 
 class BulkCreateOrderSerializer(ListSerializer):
     def create(self, validated_data):
@@ -51,6 +53,16 @@ class TodaysOrderSerializer(ModelSerializer):
         if isinstance(self._kwargs['data'], dict):
             instance.save()
 
+        return instance
+
+    def update(self, instance, validated_data):
+
+        instance.dispatch_status = validated_data['dispatch_status']
+        instance.dispatch_date = validated_data['dispatch_date']
+        instance.delivery_status = validated_data['delivery_status']
+        instance.delivery_date = validated_data['delivery_date']
+
+        instance.save()
         return instance
 
 

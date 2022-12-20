@@ -10,6 +10,15 @@ from rest_framework import status
 
 from rest_framework.decorators import action
 
+from django.db.models import Max
+
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes
+)
+
 
 class FullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = FullOrderSerializer
@@ -27,7 +36,22 @@ class FullOrderViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status.HTTP_201_CREATED)
 
-
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'find_max',
+                OpenApiTypes.INT, enum=[0, 1],
+                description='Find Max Order Number'
+            ),
+            OpenApiParameter(
+                'find_null',
+                OpenApiTypes.INT, enum=[0, 1],
+                description='Find all null orders'
+            )
+        ]
+    )
+)
 class TodaysOrderViewSet(viewsets.ModelViewSet):
     serializer_class = TodaysOrderSerializer
     queryset = TodaysOrder.objects.all()
@@ -52,12 +76,21 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
         if 'filter_by_null' specified in query params.
         """
 
+        find_max = bool(
+            int(self.request.query_params.get('find_max', 0))
+        )
+
         queryset = self.queryset
 
         if 'filter_by_null' in self.request.GET:
             return queryset.filter(
                 delivery_status=None
             )
+        elif find_max:
+            max_number = queryset.aggregate(Max('order_number'))
+            print('MAX NUMBER???', max_number)
+            return queryset.filter(order_number=max_number['order_number__max'])
+            
         return queryset
     
 
