@@ -1,13 +1,13 @@
 """Serializers for the Orders API View."""
 
-from rest_framework.serializers import ModelSerializer, ListSerializer
+from rest_framework import serializers
 from core.models import FullOrder, TodaysOrder, NullOrder
 
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
 
-class BulkCreateOrderSerializer(ListSerializer):
+class BulkCreateOrderSerializer(serializers.ListSerializer):
     def create(self, validated_data):
         res = [self.child.create(attrs) for attrs in validated_data]
 
@@ -19,11 +19,12 @@ class BulkCreateOrderSerializer(ListSerializer):
         return res
 
 
-class FullOrderSerializer(ModelSerializer):
+class FullOrderSerializer(serializers.ModelSerializer):
+
 
     class Meta:
         model = FullOrder
-        exclude = ('id',)
+        fields = '__all__'
         list_serializer_class = BulkCreateOrderSerializer
 
     def create(self, validated_data):
@@ -34,10 +35,8 @@ class FullOrderSerializer(ModelSerializer):
 
         return instance
     
-    
 
-
-class TodaysOrderSerializer(ModelSerializer):
+class TodaysOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TodaysOrder
@@ -54,7 +53,7 @@ class TodaysOrderSerializer(ModelSerializer):
         return instance
 
 
-class NullOrderSerializer(ModelSerializer):
+class NullOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NullOrder
@@ -68,3 +67,21 @@ class NullOrderSerializer(ModelSerializer):
             instance.save()
 
         return instance
+
+
+class CountTBSerializer(serializers.ModelSerializer):
+
+    max_toothbrush_2000 = serializers.SerializerMethodField()
+    max_toothbrush_4000 = serializers.SerializerMethodField()
+
+
+    class Meta:
+        model = FullOrder
+        fields = ('max_toothbrush_2000','max_toothbrush_4000',)
+
+
+    def get_max_toothbrush_2000(self, obj):
+        return FullOrder.objects.filter(toothbrush_type='Toothbrush 2000').count()
+    
+    def get_max_toothbrush_4000(self, obj):
+        return FullOrder.objects.filter(toothbrush_type='Toothbrush 4000').count()

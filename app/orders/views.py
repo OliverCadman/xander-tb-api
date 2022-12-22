@@ -3,12 +3,15 @@
 from rest_framework import viewsets
 from orders.serializers import (FullOrderSerializer,
                                 TodaysOrderSerializer,
-                                NullOrderSerializer)
+                                NullOrderSerializer,
+                                CountTBSerializer)
 from core.models import FullOrder, TodaysOrder, NullOrder
 from rest_framework.response import Response
 from rest_framework import status
 
 from rest_framework.decorators import action
+
+from django.db.models import Count, Max
 
 
 class FullOrderViewSet(viewsets.ModelViewSet):
@@ -87,3 +90,9 @@ class NullOrderViewSet(viewsets.ModelViewSet):
         return Response(
             status.HTTP_204_NO_CONTENT
         )
+
+
+class CountToothbrushTypesViewSet(viewsets.ModelViewSet):
+    serializer_class = CountTBSerializer
+    queryset = FullOrder.objects.filter(id=1)
+    

@@ -76,6 +76,11 @@ class FullOrder(AbstractTBData):
 
     def __str__(self):
         return self.order_number
+    
+    @property
+    def toothbrush_count(self):
+        count = self.toothbrush_type.count
+        return count
 
 
 class TodaysOrder(AbstractTBData):
