@@ -1,2 +1,6 @@
 .env
 .env.sample
+app/__pycache__/
+app/*/__pycache__/
+app/*/*/__pycache__/
+app/*/*/*/__pycache__/
