@@ -11,18 +11,12 @@ from rest_framework import status
 
 from rest_framework.decorators import action
 
-<<<<<<< HEAD
-from django.db.models import Count, Max
-=======
-from django.db.models import Max
-
 from drf_spectacular.utils import (
     extend_schema_view,
     extend_schema,
     OpenApiParameter,
     OpenApiTypes
 )
->>>>>>> 26cbe247ff7daa771a63c2a52b005cb9ee58f067
 
 
 class FullOrderViewSet(viewsets.ModelViewSet):
