@@ -18,7 +18,17 @@ from drf_spectacular.utils import (
     OpenApiTypes
 )
 
-
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'postal_region',
+                 OpenApiTypes.STR,
+                description='Search by postcode area'
+            ),
+        ]
+    )
+)
 class FullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = FullOrderSerializer
     queryset = FullOrder.objects.all()
@@ -34,6 +44,17 @@ class FullOrderViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data, status.HTTP_201_CREATED)
+    
+    def get_queryset(self):
+        queryset = self.queryset
+
+        if 'postal_region' in self.request.query_params:
+            region = self.request.query_params['postal_region']
+            queryset = FullOrder.objects.filter(delivery_postcode__contains=region)
+            return queryset
+        
+        return queryset  
+
 
 @extend_schema_view(
     list=extend_schema(
