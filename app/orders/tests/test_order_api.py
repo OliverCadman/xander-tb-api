@@ -437,7 +437,8 @@ class PublicOrderAPITests(TestCase):
                     payload = {
                         'dispatch_date': json_time,
                         'delivery_status': 'TEST PATCH DELIVERY STATUS',
-                        'delivery_date': json_time
+                        'delivery_date': json_time,
+                        'dispatch_status': 'TEST PATCH DISPATCH STATUS'
                     }
 
                     res = self.client.patch(

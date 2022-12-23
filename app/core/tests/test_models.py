@@ -5,8 +5,8 @@ from django.contrib.auth import get_user_model
 import datetime
 from pytz import utc
 
-from core.models import FullOrder
-
+from core.models import (FullOrder, TodaysOrder, NullOrder,
+                         DeliveryPostcode, BillingPostcode)
 
 class UserModelTests(TestCase):
     """Test User Model"""
@@ -84,8 +84,8 @@ class ToothbrushOrderModelTests(TestCase):
             'delivery_date': utc.localize(datetime.datetime.now())
         }
 
-    def test_create_full_order_model(self):
-        """Tests creating a full order."""
+    def test_create_full_orderl(self):
+        """Test creating a full order."""
 
         full_order = FullOrder.objects.create(
             **self.order_details
@@ -93,3 +93,169 @@ class ToothbrushOrderModelTests(TestCase):
 
         self.assertEqual(full_order.__str__(),
                          self.order_details['order_number'])
+    
+    def test_create_todays_order(self):
+        """Test creating today's order."""
+
+        todays_order = TodaysOrder.objects.create(
+            **self.order_details
+        )
+
+        self.assertEqual(todays_order.__str__(),
+                         self.order_details['order_number'])
+
+    def test_create_null_order(self):
+        """Test creating a null order."""
+
+        del self.order_details['dispatch_date']
+        del self.order_details['dispatch_status']
+        del self.order_details['delivery_date']
+        del self.order_details['delivery_status']
+
+        null_order = NullOrder.objects.create(
+            **self.order_details
+        )
+
+        self.assertEqual(null_order.__str__(),
+                         self.order_details['order_number'])
+    
+    def test_create_delivery_postcode_with_todays_order_relation(self):
+        """Test creating a postcode object."""
+
+        del self.order_details['dispatch_date']
+        del self.order_details['dispatch_status']
+        del self.order_details['delivery_date']
+        del self.order_details['delivery_status']
+
+        test_todays_order = TodaysOrder.objects.create(
+            **self.order_details
+        )
+
+        postcode = 'Test Postcode'
+
+        test_postcode = DeliveryPostcode.objects.create(
+            postcode=postcode,
+            todays_order=test_todays_order,
+        )
+
+        self.assertEqual(test_postcode.__str__(), postcode)
+
+        test_todays_order.refresh_from_db()
+
+        self.assertEqual(
+            test_todays_order.delivery_postcode.__str__(),
+            postcode
+        )
+
+    def test_create_billing_postcode_with_todays_order_relation(self):
+        """Test creating a postcode object."""
+
+        del self.order_details['dispatch_date']
+        del self.order_details['dispatch_status']
+        del self.order_details['delivery_date']
+        del self.order_details['delivery_status']
+
+        test_todays_order = TodaysOrder.objects.create(
+            **self.order_details
+        )
+
+        postcode = 'Test Postcode'
+
+        test_postcode = BillingPostcode.objects.create(
+            postcode=postcode,
+            todays_order=test_todays_order,
+        )
+
+        self.assertEqual(test_postcode.__str__(), postcode)   
+
+        test_todays_order.refresh_from_db()
+
+        self.assertEqual(
+            test_todays_order.billing_postcode.__str__(),
+            postcode)
+    
+    def test_create_delivery_postcode_with_all_object_relation(self):
+        """
+        Test creating a Delivery postcode with FullOrder, TodaysOrder,
+        and NullOrder as related objects. 
+        """
+
+        postcode = 'Test Postcode'
+
+        test_full_order = FullOrder.objects.create(
+            **self.order_details
+        )
+
+        del self.order_details['dispatch_date']
+        del self.order_details['dispatch_status']
+        del self.order_details['delivery_date']
+        del self.order_details['delivery_status']
+
+        self.order_details['order_number'] = 'BRU00005678'
+
+        test_todays_order = TodaysOrder.objects.create(**self.order_details)
+
+        self.order_details['order_number'] = 'BRU0001234'
+
+        test_null_order = NullOrder.objects.create(**self.order_details)
+
+        test_postcode = DeliveryPostcode.objects.create(
+            postcode=postcode,
+            full_order=test_full_order,
+            todays_order=test_todays_order,
+            null_order=test_null_order
+        )
+
+        self.assertEqual(test_postcode.__str__(), postcode)
+
+        test_full_order.refresh_from_db()
+        test_todays_order.refresh_from_db()
+        test_null_order.refresh_from_db()
+
+        
+        self.assertEqual(test_full_order.delivery_postcode.__str__(), test_postcode.__str__())
+        self.assertEqual(test_null_order.delivery_postcode.__str__(), test_postcode.__str__())
+        self.assertEqual(test_todays_order.delivery_postcode.__str__(), test_postcode.__str__())
+
+    def test_create_delivery_postcode_with_all_object_relation(self):
+        """
+        Test creating a Billing postcode with FullOrder, TodaysOrder,
+        and NullOrder as related objects. 
+        """
+
+        postcode = 'Test Postcode'
+
+        test_full_order = FullOrder.objects.create(
+            **self.order_details
+        )
+
+        del self.order_details['dispatch_date']
+        del self.order_details['dispatch_status']
+        del self.order_details['delivery_date']
+        del self.order_details['delivery_status']
+
+        self.order_details['order_number'] = 'BRU00005678'
+
+        test_todays_order = TodaysOrder.objects.create(**self.order_details)
+
+        self.order_details['order_number'] = 'BRU0001234'
+
+        test_null_order = NullOrder.objects.create(**self.order_details)
+
+        test_postcode = BillingPostcode.objects.create(
+            postcode=postcode,
+            full_order=test_full_order,
+            todays_order=test_todays_order,
+            null_order=test_null_order
+        )
+
+        self.assertEqual(test_postcode.__str__(), postcode)
+
+        test_full_order.refresh_from_db()
+        test_todays_order.refresh_from_db()
+        test_null_order.refresh_from_db()
+
+        
+        self.assertEqual(test_full_order.billing_postcode.__str__(), test_postcode.__str__())
+        self.assertEqual(test_null_order.billing_postcode.__str__(), test_postcode.__str__())
+        self.assertEqual(test_todays_order.billing_postcode.__str__(), test_postcode.__str__())

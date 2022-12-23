@@ -23,7 +23,6 @@ class BulkCreateOrderSerializer(serializers.ListSerializer):
 
 class FullOrderSerializer(serializers.ModelSerializer):
 
-
     class Meta:
         model = FullOrder
         fields = '__all__'

@@ -7,6 +7,8 @@ from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser,
                                         PermissionsMixin)
 
+from django.core.validators import MaxValueValidator
+
 
 class UserManager(BaseUserManager):
     """Manager for user models"""
@@ -103,3 +105,49 @@ class NullOrder(AbstractTBData):
 
     def __str__(self):
         return self.order_number
+
+
+class DeliveryPostcode(models.Model):
+    """
+    Model to represent a Delivery Postcode.
+
+    Attributes:
+        postcode (str): The postcode itself.
+        postcode_type (int):
+            1. Delivery
+            2. Billing
+        todays_order (TodaysOrder): A reference to a TodaysOrder model
+        full_order (FullOrder): A reference to a FullOrder model (null to start)
+
+    """
+
+    postcode = models.CharField(max_length=20)
+    todays_order = models.OneToOneField(TodaysOrder, on_delete=models.CASCADE)
+    null_order = models.OneToOneField(NullOrder, on_delete=models.CASCADE, null=True)
+    full_order = models.OneToOneField(FullOrder, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.postcode
+
+
+class BillingPostcode(models.Model):
+    """
+    Model to represent a Billing Postcode.
+
+    Attributes:
+        postcode (str): The postcode itself.
+        postcode_type (int):
+            1. Delivery
+            2. Billing
+        todays_order (TodaysOrder): A reference to a TodaysOrder model
+        full_order (FullOrder): A reference to a FullOrder model (null to start)
+
+    """
+
+    postcode = models.CharField(max_length=20)
+    todays_order = models.OneToOneField(TodaysOrder, on_delete=models.CASCADE)
+    null_order = models.OneToOneField(NullOrder, on_delete=models.CASCADE, null=True)
+    full_order = models.OneToOneField(FullOrder, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.postcode

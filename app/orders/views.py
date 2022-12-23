@@ -9,6 +9,8 @@ from core.models import FullOrder, TodaysOrder, NullOrder
 from rest_framework.response import Response
 from rest_framework import status
 
+from django.db.models import Count
+
 from rest_framework.decorators import action
 
 from drf_spectacular.utils import (
@@ -52,6 +54,11 @@ class FullOrderViewSet(viewsets.ModelViewSet):
             region = self.request.query_params['postal_region']
             queryset = FullOrder.objects.filter(delivery_postcode__contains=region)
             return queryset
+        elif 'most_popular_by_region' in self.request.query_params:
+            print('HELLOOOO')
+            queryset = FullOrder.objects.values().annotate(
+                occurrences=Count('delivery_postcode')
+            ).order_by('-occurrences')
         
         return queryset  
 
