@@ -8,6 +8,8 @@ from pytz import utc
 from core.models import (FullOrder, TodaysOrder, NullOrder,
                          DeliveryPostcode, BillingPostcode)
 
+from orders.serializers import TodaysOrderSerializer
+
 class UserModelTests(TestCase):
     """Test User Model"""
 
@@ -75,8 +77,6 @@ class ToothbrushOrderModelTests(TestCase):
             'order_date': utc.localize(datetime.datetime.now()),
             'customer_age': 20,
             'order_quantity': 5,
-            'delivery_postcode': 'Test Postcode',
-            'billing_postcode': 'Test Postcode',
             'is_first': True,
             'dispatch_status': 'Test Dispatch Status',
             'dispatch_date': utc.localize(datetime.datetime.now()),
@@ -142,8 +142,10 @@ class ToothbrushOrderModelTests(TestCase):
 
         test_todays_order.refresh_from_db()
 
+        print('TODAYS ORDER DELIVERY POSTCODE:', test_todays_order.delivery_postcode_today.__str__())
+
         self.assertEqual(
-            test_todays_order.delivery_postcode.__str__(),
+            test_todays_order.delivery_postcode_today.__str__(),
             postcode
         )
 
@@ -168,12 +170,7 @@ class ToothbrushOrderModelTests(TestCase):
 
         self.assertEqual(test_postcode.__str__(), postcode)   
 
-        test_todays_order.refresh_from_db()
 
-        self.assertEqual(
-            test_todays_order.billing_postcode.__str__(),
-            postcode)
-    
     def test_create_delivery_postcode_with_all_object_relation(self):
         """
         Test creating a Delivery postcode with FullOrder, TodaysOrder,
@@ -212,10 +209,9 @@ class ToothbrushOrderModelTests(TestCase):
         test_todays_order.refresh_from_db()
         test_null_order.refresh_from_db()
 
-        
-        self.assertEqual(test_full_order.delivery_postcode.__str__(), test_postcode.__str__())
-        self.assertEqual(test_null_order.delivery_postcode.__str__(), test_postcode.__str__())
-        self.assertEqual(test_todays_order.delivery_postcode.__str__(), test_postcode.__str__())
+        self.assertEqual(test_full_order.delivery_postcode_full.__str__(), test_postcode.__str__())
+        self.assertEqual(test_null_order.delivery_postcode_null.__str__(), test_postcode.__str__())
+        self.assertEqual(test_todays_order.delivery_postcode_today.__str__(), test_postcode.__str__())
 
     def test_create_delivery_postcode_with_all_object_relation(self):
         """
@@ -256,6 +252,6 @@ class ToothbrushOrderModelTests(TestCase):
         test_null_order.refresh_from_db()
 
         
-        self.assertEqual(test_full_order.billing_postcode.__str__(), test_postcode.__str__())
-        self.assertEqual(test_null_order.billing_postcode.__str__(), test_postcode.__str__())
-        self.assertEqual(test_todays_order.billing_postcode.__str__(), test_postcode.__str__())
+        self.assertEqual(test_full_order.billing_postcode_full.__str__(), test_postcode.__str__())
+        self.assertEqual(test_null_order.billing_postcode_null.__str__(), test_postcode.__str__())
+        self.assertEqual(test_todays_order.billing_postcode_today.__str__(), test_postcode.__str__())

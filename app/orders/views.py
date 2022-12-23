@@ -1,17 +1,27 @@
 """Views for Orders API"""
 
 from rest_framework import viewsets
-from orders.serializers import (FullOrderSerializer,
-                                TodaysOrderSerializer,
-                                NullOrderSerializer,
-                                CountTBSerializer)
-from core.models import FullOrder, TodaysOrder, NullOrder
+from orders.serializers import (
+    FullOrderSerializer,
+    TodaysOrderSerializer,
+    NullOrderSerializer,
+    CountTBSerializer,
+    DeliveryPostcodeSerializer,
+    BillingPostcodeSerializer
+)
+from core.models import (
+    FullOrder,
+    TodaysOrder,
+    NullOrder,
+    DeliveryPostcode,
+    BillingPostcode
+)
+
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 
 from django.db.models import Count
-
-from rest_framework.decorators import action
 
 from drf_spectacular.utils import (
     extend_schema_view,
@@ -121,7 +131,6 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
         return queryset
     
 
-
 class NullOrderViewSet(viewsets.ModelViewSet):
     serializer_class = NullOrderSerializer
     queryset = NullOrder.objects.all()
@@ -152,4 +161,32 @@ class NullOrderViewSet(viewsets.ModelViewSet):
 class CountToothbrushTypesViewSet(viewsets.ModelViewSet):
     serializer_class = CountTBSerializer
     queryset = FullOrder.objects.filter(id=1)
+    
+
+class DeliveryPostcodeViewSet(viewsets.ModelViewSet):
+    serializer_class = DeliveryPostcodeSerializer
+    queryset = DeliveryPostcode.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data,
+            status.HTTP_201_CREATED
+        )
+
+
+class BillingPostcodeViewset(viewsets.ModelViewSet):
+    serializer_class = BillingPostcodeSerializer
+    queryset = BillingPostcode.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data,
+            status.HTTP_201_CREATED
+        )
     

@@ -1,7 +1,8 @@
 """Serializers for the Orders API View."""
 
 from rest_framework import serializers
-from core.models import FullOrder, TodaysOrder, NullOrder
+from core.models import (FullOrder, TodaysOrder, NullOrder,
+                         DeliveryPostcode, BillingPostcode)
 
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -10,6 +11,10 @@ import datetime
 
 
 class BulkCreateOrderSerializer(serializers.ListSerializer):
+    """
+    List Serializer for creating objects in bulk.
+    """
+
     def create(self, validated_data):
         res = [self.child.create(attrs) for attrs in validated_data]
 
@@ -22,6 +27,9 @@ class BulkCreateOrderSerializer(serializers.ListSerializer):
 
 
 class FullOrderSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Full Orders.
+    """
 
     class Meta:
         model = FullOrder
@@ -38,6 +46,9 @@ class FullOrderSerializer(serializers.ModelSerializer):
     
 
 class TodaysOrderSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Todays Orders.
+    """
 
     class Meta:
         model = TodaysOrder
@@ -65,6 +76,9 @@ class TodaysOrderSerializer(serializers.ModelSerializer):
 
 
 class NullOrderSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Null Orders.
+    """
 
     class Meta:
         model = NullOrder
@@ -81,10 +95,13 @@ class NullOrderSerializer(serializers.ModelSerializer):
 
 
 class CountTBSerializer(serializers.ModelSerializer):
+    """
+    Serializer to display two fields only,
+    pertaining to the amount of each toothbrush sold.
+    """
 
     max_toothbrush_2000 = serializers.SerializerMethodField()
     max_toothbrush_4000 = serializers.SerializerMethodField()
-
 
     class Meta:
         model = FullOrder
@@ -96,3 +113,21 @@ class CountTBSerializer(serializers.ModelSerializer):
     
     def get_max_toothbrush_4000(self, obj):
         return FullOrder.objects.filter(toothbrush_type='Toothbrush 4000').count()
+
+
+class DeliveryPostcodeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Delivery Postcodes.
+    """
+    class Meta:
+        model = DeliveryPostcode
+        fields = '__all__'
+
+
+class BillingPostcodeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Billing Postcodes.
+    """
+    class Meta:
+        model = BillingPostcode
+        fields = '__all__'

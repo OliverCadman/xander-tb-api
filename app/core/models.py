@@ -65,8 +65,6 @@ class AbstractTBData(models.Model):
     order_date = models.DateTimeField()
     customer_age = models.IntegerField()
     order_quantity = models.IntegerField()
-    delivery_postcode = models.CharField(max_length=20)
-    billing_postcode = models.CharField(max_length=20)
     is_first = models.BooleanField()
     dispatch_status = models.CharField(max_length=30, null=False, blank=False)
     dispatch_date = models.DateTimeField()
@@ -122,9 +120,12 @@ class DeliveryPostcode(models.Model):
     """
 
     postcode = models.CharField(max_length=20)
-    todays_order = models.OneToOneField(TodaysOrder, on_delete=models.CASCADE)
-    null_order = models.OneToOneField(NullOrder, on_delete=models.CASCADE, null=True)
-    full_order = models.OneToOneField(FullOrder, on_delete=models.CASCADE, null=True)
+    todays_order = models.OneToOneField(
+        TodaysOrder, on_delete=models.CASCADE, related_name='delivery_postcode_today')
+    null_order = models.OneToOneField(
+        NullOrder, on_delete=models.CASCADE, null=True, related_name='delivery_postcode_null')
+    full_order = models.OneToOneField(
+        FullOrder, on_delete=models.CASCADE, null=True, related_name='delivery_postcode_full')
 
     def __str__(self):
         return self.postcode
@@ -145,9 +146,9 @@ class BillingPostcode(models.Model):
     """
 
     postcode = models.CharField(max_length=20)
-    todays_order = models.OneToOneField(TodaysOrder, on_delete=models.CASCADE)
-    null_order = models.OneToOneField(NullOrder, on_delete=models.CASCADE, null=True)
-    full_order = models.OneToOneField(FullOrder, on_delete=models.CASCADE, null=True)
+    todays_order = models.OneToOneField(TodaysOrder, on_delete=models.CASCADE, related_name='billing_postcode_today')
+    null_order = models.OneToOneField(NullOrder, on_delete=models.CASCADE, null=True, related_name='billing_postcode_null')
+    full_order = models.OneToOneField(FullOrder, on_delete=models.CASCADE, null=True, related_name='billing_postcode_full')
 
     def __str__(self):
         return self.postcode
