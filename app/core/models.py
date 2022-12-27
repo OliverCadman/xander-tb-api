@@ -51,6 +51,45 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+class DeliveryPostcode(models.Model):
+    """
+    Model to represent a Delivery Postcode.
+
+    Attributes:
+        postcode (str): The postcode itself.
+        postcode_type (int):
+            1. Delivery
+            2. Billing
+        todays_order (TodaysOrder): A reference to a TodaysOrder model
+        full_order (FullOrder): A reference to a FullOrder model (null to start)
+
+    """
+
+    postcode = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.postcode
+
+
+class BillingPostcode(models.Model):
+    """
+    Model to represent a Billing Postcode.
+
+    Attributes:
+        postcode (str): The postcode itself.
+        postcode_type (int):
+            1. Delivery
+            2. Billing
+        todays_order (TodaysOrder): A reference to a TodaysOrder model
+        full_order (FullOrder): A reference to a FullOrder model (null to start)
+
+    """
+
+    postcode = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.postcode
+
 
 class AbstractTBData(models.Model):
     """
@@ -74,6 +113,11 @@ class AbstractTBData(models.Model):
 
 class FullOrder(AbstractTBData):
 
+    delivery_postcode = models.OneToOneField(
+        DeliveryPostcode, on_delete=models.CASCADE, related_name='full_delivery_pc', null=True)
+    billing_postcode = models.OneToOneField(
+        BillingPostcode, on_delete=models.CASCADE, related_name='full_billing_pc', null=True)
+
     def __str__(self):
         return self.order_number
     
@@ -90,6 +134,11 @@ class TodaysOrder(AbstractTBData):
     delivery_status = models.CharField(max_length=30, null=True, blank=True)
     delivery_date = models.DateTimeField(null=True, blank=True)
 
+    delivery_postcode = models.OneToOneField(
+        DeliveryPostcode, on_delete=models.CASCADE, related_name='today_delivery_pc', null=True)
+    billing_postcode = models.OneToOneField(
+        BillingPostcode, on_delete=models.CASCADE, related_name='today_billing_pc', null=True)
+
     def __str__(self):
         return self.order_number
 
@@ -101,54 +150,10 @@ class NullOrder(AbstractTBData):
     delivery_status = models.CharField(max_length=30, null=True, blank=True)
     delivery_date = models.DateTimeField(null=True, blank=True)
 
+    delivery_postcode = models.OneToOneField(
+        DeliveryPostcode, on_delete=models.CASCADE, related_name='null_delivery_pc', null=True)
+    billing_postcode = models.OneToOneField(
+        BillingPostcode, on_delete=models.CASCADE, related_name='null_billing_pc', null=True)
+
     def __str__(self):
         return self.order_number
-
-
-class DeliveryPostcode(models.Model):
-    """
-    Model to represent a Delivery Postcode.
-
-    Attributes:
-        postcode (str): The postcode itself.
-        postcode_type (int):
-            1. Delivery
-            2. Billing
-        todays_order (TodaysOrder): A reference to a TodaysOrder model
-        full_order (FullOrder): A reference to a FullOrder model (null to start)
-
-    """
-
-    postcode = models.CharField(max_length=20)
-    todays_order = models.OneToOneField(
-        TodaysOrder, on_delete=models.CASCADE, related_name='delivery_postcode_today')
-    null_order = models.OneToOneField(
-        NullOrder, on_delete=models.CASCADE, null=True, related_name='delivery_postcode_null')
-    full_order = models.OneToOneField(
-        FullOrder, on_delete=models.CASCADE, null=True, related_name='delivery_postcode_full')
-
-    def __str__(self):
-        return self.postcode
-
-
-class BillingPostcode(models.Model):
-    """
-    Model to represent a Billing Postcode.
-
-    Attributes:
-        postcode (str): The postcode itself.
-        postcode_type (int):
-            1. Delivery
-            2. Billing
-        todays_order (TodaysOrder): A reference to a TodaysOrder model
-        full_order (FullOrder): A reference to a FullOrder model (null to start)
-
-    """
-
-    postcode = models.CharField(max_length=20)
-    todays_order = models.OneToOneField(TodaysOrder, on_delete=models.CASCADE, related_name='billing_postcode_today')
-    null_order = models.OneToOneField(NullOrder, on_delete=models.CASCADE, null=True, related_name='billing_postcode_null')
-    full_order = models.OneToOneField(FullOrder, on_delete=models.CASCADE, null=True, related_name='billing_postcode_full')
-
-    def __str__(self):
-        return self.postcode

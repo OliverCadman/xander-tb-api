@@ -56,7 +56,7 @@ def create_order(type_order, **params):
         "toothbrush_type": "Test Toothbrush",
         "order_date": time_now,
         "customer_age": 20,
-        "order_quantity": 5,
+        "order_quantity": 7,
         "is_first": True,
         "dispatch_status": "Test Dispatch Status",
         "dispatch_date": time_now,
@@ -88,7 +88,13 @@ class PublicOrderAPITests(TestCase):
             "order_number": "BRU00001",
             "toothbrush_type": "Test Toothbrush",
             "order_date": time_now,
-            "customer_age": 20,
+            "customer_age": 345,
+            "delivery_postcode": {
+                "postcode": 'Delivery Postcode'
+            },
+            "billing_postcode": {
+                "postcode": "Billing Postcode"
+            },
             "order_quantity": 5,
             "is_first": True,
             "dispatch_status": "Test Dispatch Status",
@@ -102,7 +108,7 @@ class PublicOrderAPITests(TestCase):
     def test_create_order_success(self):
         """Test creating an order is successful"""
 
-        res = self.client.post(FULL_ORDER_URL, self.payload)
+        res = self.client.post(FULL_ORDER_URL, self.payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         order = FullOrder.objects.get(
@@ -116,7 +122,7 @@ class PublicOrderAPITests(TestCase):
         """
         self.payload['dispatch_status'] = ''
 
-        res = self.client.post(FULL_ORDER_URL, self.payload)
+        res = self.client.post(FULL_ORDER_URL, self.payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -135,7 +141,13 @@ class PublicOrderAPITests(TestCase):
                 "toothbrush_type": "Test Toothbrush",
                 "order_date": json_time,
                 "customer_age": 20,
-                "order_quantity": 5,
+                "order_quantity": 133,
+                "delivery_postcode": {
+                    "postcode": "Delivery Postcode"
+                }, 
+                "billing_postcode": {
+                    "postcode": "Billing Postcode"
+                },
                 "is_first": True,
                 "dispatch_status": "Test Dispatch Status",
                 "dispatch_date": json_time,
@@ -147,8 +159,8 @@ class PublicOrderAPITests(TestCase):
 
         res = self.client.post(
             FULL_ORDER_URL,
-            data=json.dumps(data),
-            content_type='application/json'
+            data=data,
+            format='json'
         )
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -161,7 +173,8 @@ class PublicOrderAPITests(TestCase):
         """Test posting to create_todays_order endpoint is successful"""
         res = self.client.post(
             TODAYS_ORDER_URL,
-            self.payload
+            self.payload,
+            format='json'
         )
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -186,7 +199,8 @@ class PublicOrderAPITests(TestCase):
 
         res = self.client.post(
             TODAYS_ORDER_URL,
-            self.payload
+            self.payload,
+            format='json'
         )
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -196,7 +210,7 @@ class PublicOrderAPITests(TestCase):
         Test bulk creation of todays orders
         """
 
-        TEST_SIZE = 3000
+        TEST_SIZE = 10
 
         t1 = perf_counter()
 
@@ -206,7 +220,13 @@ class PublicOrderAPITests(TestCase):
                 "toothbrush_type": "Test Toothbrush",
                 "order_date": json_time,
                 "customer_age": 20,
-                "order_quantity": 5,
+                "order_quantity": 12345,
+                "delivery_postcode": {
+                    "postcode": "Delivery Postcode"
+                },
+                "billing_postcode": {
+                    "postcode": "Billing Postcode"
+                },
                 "is_first": True,
                 "dispatch_status": "Test Dispatch Status",
                 "dispatch_date": json_time,
@@ -218,12 +238,18 @@ class PublicOrderAPITests(TestCase):
 
         res = self.client.post(
             TODAYS_ORDER_URL,
-            data=json.dumps(data),
-            content_type='application/json'
+            data=data,
+            format="json"
+
         )
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(res.json()), TEST_SIZE)
+
+        todays_orders = TodaysOrder.objects.all()
+        serializer = TodaysOrderSerializer(todays_orders, many=True)
+
+        self.assertEqual(res.data, serializer.data)
 
         t2 = perf_counter()
 
@@ -245,7 +271,13 @@ class PublicOrderAPITests(TestCase):
                 "order_number": f"BRU0000{x}",
                 "toothbrush_type": "Test Toothbrush",
                 "order_date": json_time,
-                "customer_age": 20,
+                "delivery_postcode": {
+                    "postcode": "Delivery Postcode"
+                },
+                "billing_postcode": {
+                    "postcode": "Billing Postcode"
+                },
+                "customer_age": 30,
                 "order_quantity": 5,
                 "is_first": True
             }
@@ -254,8 +286,8 @@ class PublicOrderAPITests(TestCase):
 
         res = self.client.post(
             NULL_ORDER_URL,
-            data=json.dumps(data),
-            content_type='application/json'
+            data=data,
+            format="json"
         )
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -308,15 +340,6 @@ class PublicOrderAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
-
-    def test_full_order_insertion_with_json_loads(self):
-
-        self.payload['order_date'] = json_time
-        self.payload['dispatch_date'] = json_time
-        self.payload['delivery_date'] = json_time
-        json_data = json.dumps(self.payload)
-
-        res = self.client.post(FULL_ORDER_URL, json.loads(json_data))
     
     def test_get_null_orders(self):
         """Test getting only null orders from DB"""
@@ -425,8 +448,8 @@ class PublicOrderAPITests(TestCase):
 
                     res = self.client.patch(
                         test_url,
-                        data=json.dumps(payload),
-                        content_type='application/json',
+                        data=payload,
+                        format="json"
                         
                     )
         

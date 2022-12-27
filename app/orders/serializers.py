@@ -10,6 +10,26 @@ from django.core.exceptions import ValidationError
 import datetime
 
 
+class DeliveryPostcodeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Delivery Postcodes.
+    """
+    class Meta:
+        model = DeliveryPostcode
+        fields = ['id', 'postcode']
+        read_only_fields = ['id']
+
+
+class BillingPostcodeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Billing Postcodes.
+    """
+    class Meta:
+        model = BillingPostcode
+        fields = ['id', 'postcode']
+        read_only_fields = ['id']
+
+
 class BulkCreateOrderSerializer(serializers.ListSerializer):
     """
     List Serializer for creating objects in bulk.
@@ -31,18 +51,46 @@ class FullOrderSerializer(serializers.ModelSerializer):
     Serializer for Full Orders.
     """
 
+    billing_postcode = BillingPostcodeSerializer(required=False)
+    delivery_postcode = DeliveryPostcodeSerializer(required=False)
+
     class Meta:
         model = FullOrder
-        fields = '__all__'
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity',
+                  'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
+                  'dispatch_date', 'delivery_status', 'delivery_date']
         list_serializer_class = BulkCreateOrderSerializer
+    
 
     def create(self, validated_data):
+
+        delivery_postcode = validated_data.pop('delivery_postcode', {})
+        billing_postcode = validated_data.pop('billing_postcode', {})
+
         instance = FullOrder(**validated_data)
+        self._get_or_create_delivery_postcode(delivery_postcode, instance)
+        self._get_or_create_billing_postcode(billing_postcode, instance)
 
         if isinstance(self._kwargs['data'], dict):
             instance.save()
 
         return instance
+    
+    def _get_or_create_billing_postcode(self, postcode, order):
+
+        billing_postcode = BillingPostcode.objects.create(
+            **postcode
+        )
+
+        order.billing_postcode = billing_postcode
+    
+    def _get_or_create_delivery_postcode(self, postcode, order):
+
+        delivery_postcode = DeliveryPostcode.objects.create(
+            **postcode
+        )
+
+        order.delivery_postcode = delivery_postcode
     
 
 class TodaysOrderSerializer(serializers.ModelSerializer):
@@ -50,19 +98,47 @@ class TodaysOrderSerializer(serializers.ModelSerializer):
     Serializer for Todays Orders.
     """
 
+    delivery_postcode = DeliveryPostcodeSerializer(required=False)
+    billing_postcode = BillingPostcodeSerializer(required=False)
+
     class Meta:
         model = TodaysOrder
-        fields = '__all__'
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity',
+                  'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
+                  'dispatch_date', 'delivery_status', 'delivery_date']
         read_only_fields = ('id',)
         list_serializer_class = BulkCreateOrderSerializer
 
     def create(self, validated_data):
+   
+        delivery_postcode = validated_data.pop('delivery_postcode', {})
+        billing_postcode = validated_data.pop('billing_postcode', {})
+
         instance = TodaysOrder(**validated_data)
+        # self._get_or_create_billing_postcode(billing_postcode, instance)
+        # self._get_or_create_delivery_postcode(delivery_postcode, instance)
 
         if isinstance(self._kwargs['data'], dict):
             instance.save()
 
         return instance
+    
+    def _get_or_create_billing_postcode(self, postcode, order):
+
+        billing_postcode = BillingPostcode.objects.create(
+            **postcode
+        )
+
+        order.billing_postcode = billing_postcode
+    
+    def _get_or_create_delivery_postcode(self, postcode, order):
+
+        delivery_postcode = DeliveryPostcode.objects.create(
+            **postcode
+        )
+
+        order.delivery_postcode = delivery_postcode
+
 
     def update(self, instance, validated_data):
 
@@ -80,18 +156,45 @@ class NullOrderSerializer(serializers.ModelSerializer):
     Serializer for Null Orders.
     """
 
+    delivery_postcode = DeliveryPostcodeSerializer(required=False)
+    billing_postcode = BillingPostcodeSerializer(required=False)
+
     class Meta:
         model = NullOrder
-        exclude = ('id',)
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity',
+                  'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
+                  'dispatch_date', 'delivery_status', 'delivery_date']
         list_serializer_class = BulkCreateOrderSerializer
 
     def create(self, validated_data):
+
+        delivery_postcode = validated_data.pop('delivery_postcode', {})
+        billing_postcode = validated_data.pop('billing_postcode', {})
+
         instance = NullOrder(**validated_data)
+        # self._get_or_create_delivery_postcode(delivery_postcode, instance)
+        # self._get_or_create_billing_postcode(billing_postcode, instance)
 
         if isinstance(self._kwargs['data'], dict):
             instance.save()
 
         return instance
+    
+    def _get_or_create_billing_postcode(self, postcode, order):
+
+        billing_postcode = BillingPostcode.objects.create(
+            **postcode
+        )
+
+        order.billing_postcode = billing_postcode
+    
+    def _get_or_create_delivery_postcode(self, postcode, order):
+
+        delivery_postcode = DeliveryPostcode.objects.create(
+            **postcode
+        )
+
+        order.delivery_postcode = delivery_postcode
 
 
 class CountTBSerializer(serializers.ModelSerializer):
@@ -113,21 +216,3 @@ class CountTBSerializer(serializers.ModelSerializer):
     
     def get_max_toothbrush_4000(self, obj):
         return FullOrder.objects.filter(toothbrush_type='Toothbrush 4000').count()
-
-
-class DeliveryPostcodeSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Delivery Postcodes.
-    """
-    class Meta:
-        model = DeliveryPostcode
-        fields = '__all__'
-
-
-class BillingPostcodeSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Billing Postcodes.
-    """
-    class Meta:
-        model = BillingPostcode
-        fields = '__all__'

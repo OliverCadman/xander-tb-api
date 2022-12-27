@@ -119,23 +119,16 @@ class PublicPostcodeAPITests(TestCase):
             format='json'
         )
 
-        print('DELIVERY RES CONTENT:', delivery_res.content)
-
         self.assertEqual(delivery_res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(billing_res.status_code, status.HTTP_201_CREATED)
 
         delivery_postcode = DeliveryPostcode.objects.get(postcode='Delivery Postcode')
         billing_postcode = BillingPostcode.objects.get(postcode='Billing Postcode')
 
-        print('DELIVERY POSTCODE:', delivery_postcode)
-        print('BILLING POSTCODE:', billing_postcode)
-
         test_todays_order.refresh_from_db()
 
         delivery_serializer = DeliveryPostcodeSerializer(delivery_postcode)
         billing_serializer = BillingPostcodeSerializer(billing_postcode)
-
-        print('DELIVERY RES?:', delivery_res.data)
 
         self.assertEqual(delivery_res.data, delivery_serializer.data)
         self.assertEqual(billing_res.data, billing_serializer.data)
