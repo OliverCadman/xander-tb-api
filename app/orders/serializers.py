@@ -161,7 +161,7 @@ class NullOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NullOrder
-        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type'
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type',
                   'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
                   'dispatch_date', 'delivery_status', 'delivery_date']
         list_serializer_class = BulkCreateOrderSerializer
