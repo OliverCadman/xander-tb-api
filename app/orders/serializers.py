@@ -56,7 +56,7 @@ class FullOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FullOrder
-        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity',
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type',
                   'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
                   'dispatch_date', 'delivery_status', 'delivery_date']
         list_serializer_class = BulkCreateOrderSerializer
@@ -103,7 +103,7 @@ class TodaysOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TodaysOrder
-        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity',
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type',
                   'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
                   'dispatch_date', 'delivery_status', 'delivery_date']
         read_only_fields = ('id',)
@@ -161,7 +161,7 @@ class NullOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NullOrder
-        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity',
+        fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type'
                   'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
                   'dispatch_date', 'delivery_status', 'delivery_date']
         list_serializer_class = BulkCreateOrderSerializer
