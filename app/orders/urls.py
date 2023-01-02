@@ -15,7 +15,7 @@ from rest_framework.routers import DefaultRouter
 
 app_name = "orders"
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 router.register('full_orders', FullOrderViewSet, basename='full_orders')
 router.register('todays_orders', TodaysOrderViewSet, basename='todays_orders')
 router.register('null_orders', NullOrderViewSet, basename='null_orders'),

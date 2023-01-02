@@ -7,7 +7,11 @@ from orders.serializers import (
     NullOrderSerializer,
     CountTBSerializer,
     DeliveryPostcodeSerializer,
-    BillingPostcodeSerializer
+    BillingPostcodeSerializer,
+    PostcodeFrequencySerializer,
+    AvgCustomerAgeSerializer,
+    AvgDeliveryDeltaSerializer,
+    FullPostcodeDataSerializer
 )
 from core.models import (
     FullOrder,
@@ -21,7 +25,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 
-from django.db.models import Count
+from django.db.models import Count, Avg, Max, F, When, Case, Q
+
+from functools import reduce
+import operator
 
 from drf_spectacular.utils import (
     extend_schema_view,
@@ -29,6 +36,8 @@ from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiTypes
 )
+
+import csv
 
 @extend_schema_view(
     list=extend_schema(
@@ -49,8 +58,21 @@ class FullOrderViewSet(viewsets.ModelViewSet):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
         return super(FullOrderViewSet, self).get_serializer(*args, **kwargs)
+    
+    def get_serializer_class(self):
+        """Return specific serializer for request."""
+    
+        if self.action == 'get_total_sales_by_postcode':
+            return PostcodeFrequencySerializer
+        elif self.action == 'get_avg_customer_age':
+            return AvgCustomerAgeSerializer
+        elif self.action == 'get_full_data_by_postcode':
+            return FullPostcodeDataSerializer
+        return self.serializer_class
 
     def create(self, request, *args, **kwargs):
+
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -64,13 +86,118 @@ class FullOrderViewSet(viewsets.ModelViewSet):
             region = self.request.query_params['postal_region']
             queryset = FullOrder.objects.filter(delivery_postcode__contains=region)
             return queryset
-        elif 'most_popular_by_region' in self.request.query_params:
-            print('HELLOOOO')
-            queryset = FullOrder.objects.values().annotate(
-                occurrences=Count('delivery_postcode')
-            ).order_by('-occurrences')
+        elif 'avg_customer_age' in self.request.query_params:
+            queryset = FullOrder.objects.aggregate(avg_customer_age=Avg('customer_age'))
+            print(queryset)
         
-        return queryset  
+        return queryset
+    
+    @action(detail=False)
+    def get_total_sales_by_postcode(self, request):
+        """
+        Get total toothbrush sales by postcode area.
+
+        Returns total sales of all toothbrush types per
+        postcode area, or sales of individual toothbrush types
+        if included in request query params.
+        """
+        toothbrush_type = None
+        if 'toothbrush_type' in request.query_params:
+            toothbrush_type = request.query_params['toothbrush_type']
+
+        if toothbrush_type == 'toothbrush_2000':
+            sales_by_postcode = FullOrder.objects.filter(toothbrush_type='Toothbrush 2000').values(
+                'delivery_postcode__postcode_area'
+            ).annotate(
+                postcode_count=Count('delivery_postcode__postcode_area')).\
+                    order_by('-postcode_count')
+        elif toothbrush_type == 'toothbrush_4000':
+            """Get sum of toothbrushes sold for each postcode area in DB."""
+            sales_by_postcode = FullOrder.objects.filter(toothbrush_type='Toothbrush 4000').values(
+                    'delivery_postcode__postcode_area'
+                ).annotate(
+                    postcode_count=Count('delivery_postcode__postcode_area')).\
+                        order_by('-postcode_count')
+        else:
+            sales_by_postcode = FullOrder.objects.values(
+                    'delivery_postcode__postcode_area'
+                ).annotate(
+                    postcode_count=Count('toothbrush_type')
+                ).order_by('-postcode_count')
+
+        serializer = self.get_serializer(sales_by_postcode, many=True)
+
+        return Response(serializer.data)
+    
+    @action(detail=False)
+    def get_full_data_by_postcode(self, request):
+        """
+        Return a comprehensive overview of data for
+        each postcode.
+        """
+        
+        data_by_postcode = FullOrder.objects.values(
+            'delivery_postcode__postcode_area'
+        ).annotate(
+            avg_customer_age=Avg('customer_age'),
+            total_tb_sales=Count('toothbrush_type'),
+            avg_delivery_delta=Avg(F('delivery_date') - F('order_date')),
+            tb_2000_sales=Count('pk', filter=Q(toothbrush_type='Toothbrush 2000')),
+            tb_4000_sales=Count('pk', filter=Q(toothbrush_type='Toothbrush 4000'))
+      
+        ).order_by('-total_tb_sales')
+
+        serializer = self.get_serializer(data_by_postcode, many=True)
+
+        return Response(serializer.data)
+        
+        
+    
+
+    @action(detail=False)
+    def get_avg_delivery_delta(self, request):
+
+        avg_delivery_delta = FullOrder.objects.aggregate(
+            avg_delivery_delta=Avg(F('delivery_date') - F('order_date'))
+        )
+
+        print(avg_delivery_delta)
+
+        serializer = AvgDeliveryDeltaSerializer(avg_delivery_delta)
+
+        return Response(serializer.data)
+    
+    @action(detail=False)
+    def get_avg_customer_age(self, request):
+        """
+        Return the average age of customer for all toothbrushes,
+        filterable by toothbrush type, and by postcode area.
+        """
+
+        toothbrush_type = None
+        postcode_area = None
+
+        if 'postcode_area' in request.query_params:
+            postcode_area = request.query_params['postcode_area']
+
+            average_customer_age = FullOrder.objects.filter(
+                delivery_postcode__postcode_area__in=postcode_area
+            ).aggregate(
+                avg_customer_age=Avg('customer_age')
+            )
+        elif 'toothbrush_type' in request.query_params:
+            toothbrush_type = ' '.join(request.query_params['toothbrush_type'].split('_'))
+            average_customer_age = FullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).aggregate(avg_customer_age=Avg('customer_age'))
+        else:
+            average_customer_age = FullOrder.objects.aggregate(
+                avg_customer_age=Avg('customer_age')
+            )
+
+        serializer = AvgCustomerAgeSerializer(average_customer_age)
+
+        return Response(serializer.data)
 
 
 @extend_schema_view(

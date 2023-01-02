@@ -123,9 +123,17 @@ class ToothbrushOrderModelTests(TestCase):
         """Test creating a postcode object."""
 
         postcode = 'Test Postcode'
+        country = 'Test Country'
+        postcode_area = 'TEST'
+        latitude = -1.254523
+        longitude = 3.543522
 
         test_postcode = DeliveryPostcode.objects.create(
-            postcode=postcode
+            postcode=postcode,
+            country=country,
+            postcode_area=postcode_area,
+            latitude=latitude,
+            longitude=longitude
         )
 
         self.assertEqual(test_postcode.__str__(), postcode)
@@ -143,9 +151,17 @@ class ToothbrushOrderModelTests(TestCase):
         )
 
         postcode = 'Test Postcode'
+        country = 'Test Country'
+        postcode_area = 'TEST'
+        latitude = -1.254523
+        longitude = 3.543522
 
         test_postcode = BillingPostcode.objects.create(
-            postcode=postcode
+            postcode=postcode,
+            country=country,
+            postcode_area=postcode_area,
+            latitude=latitude,
+            longitude=longitude
         )
 
         self.assertEqual(test_postcode.__str__(), postcode)   

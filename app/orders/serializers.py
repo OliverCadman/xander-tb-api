@@ -7,6 +7,8 @@ from core.models import (FullOrder, TodaysOrder, NullOrder,
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
+from django.db.models import Avg
+
 import datetime
 
 
@@ -16,7 +18,8 @@ class DeliveryPostcodeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = DeliveryPostcode
-        fields = ['id', 'postcode']
+        fields = ['id', 'postcode', 'country', 'postcode_area',
+                  'longitude', 'latitude']
         read_only_fields = ['id']
 
 
@@ -26,7 +29,8 @@ class BillingPostcodeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = BillingPostcode
-        fields = ['id', 'postcode']
+        fields = ['id', 'postcode', 'country', 'postcode_area',
+                'longitude', 'latitude']
         read_only_fields = ['id']
 
 
@@ -53,12 +57,14 @@ class FullOrderSerializer(serializers.ModelSerializer):
 
     billing_postcode = BillingPostcodeSerializer(required=False)
     delivery_postcode = DeliveryPostcodeSerializer(required=False)
+    avg_customer_age = serializers.ReadOnlyField()
 
     class Meta:
         model = FullOrder
         fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type',
                   'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
-                  'dispatch_date', 'delivery_status', 'delivery_date']
+                  'dispatch_date', 'delivery_status', 'delivery_date', 'avg_customer_age']
+        read_only_fields = ['id', 'avg_customer_age']
         list_serializer_class = BulkCreateOrderSerializer
     
 
@@ -91,6 +97,11 @@ class FullOrderSerializer(serializers.ModelSerializer):
         )
 
         order.delivery_postcode = delivery_postcode
+    
+    # def get_avg_customer_age(self, obj):
+    #     return FullOrder.objects.all().aggregate(
+    #         Avg('customer_age')
+    #     )
     
 
 class TodaysOrderSerializer(serializers.ModelSerializer):
@@ -216,3 +227,28 @@ class CountTBSerializer(serializers.ModelSerializer):
     
     def get_max_toothbrush_4000(self, obj):
         return FullOrder.objects.filter(toothbrush_type='Toothbrush 4000').count()
+
+
+class PostcodeFrequencySerializer(serializers.Serializer):
+
+    delivery_postcode__postcode_area = serializers.CharField()
+    postcode_count = serializers.IntegerField()
+
+
+class AvgCustomerAgeSerializer(serializers.Serializer):
+
+    avg_customer_age = serializers.IntegerField()
+
+
+class AvgDeliveryDeltaSerializer(serializers.Serializer):
+
+    avg_delivery_delta = serializers.CharField()
+
+class FullPostcodeDataSerializer(serializers.Serializer):
+
+    delivery_postcode__postcode_area = serializers.CharField()
+    avg_customer_age = serializers.IntegerField()
+    avg_delivery_delta = serializers.CharField()
+    total_tb_sales = serializers.IntegerField()
+    tb_2000_sales = serializers.IntegerField()
+    tb_4000_sales = serializers.IntegerField()
