@@ -240,9 +240,19 @@ class AvgCustomerAgeSerializer(serializers.Serializer):
     avg_customer_age = serializers.IntegerField()
 
 
-class AvgDeliveryDeltaSerializer(serializers.Serializer):
+class DeliveryDeltaSerializer(serializers.Serializer):
 
     avg_delivery_delta = serializers.CharField()
+    max_delivery_delta = serializers.CharField()
+    min_delivery_delta = serializers.CharField()
+
+
+class CustomerAgeSerializer(serializers.Serializer):
+
+    avg_customer_age = serializers.IntegerField()
+    max_customer_age = serializers.IntegerField()
+    min_customer_age = serializers.IntegerField()
+
 
 class FullPostcodeDataSerializer(serializers.Serializer):
 
