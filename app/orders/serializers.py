@@ -169,12 +169,14 @@ class NullOrderSerializer(serializers.ModelSerializer):
 
     delivery_postcode = DeliveryPostcodeSerializer(required=False)
     billing_postcode = BillingPostcodeSerializer(required=False)
+    null_order_count = serializers.ReadOnlyField()
 
     class Meta:
         model = NullOrder
         fields = ['id', 'order_number', 'order_date', 'customer_age', 'order_quantity', 'toothbrush_type',
                   'delivery_postcode', 'billing_postcode', 'is_first', 'dispatch_status',
-                  'dispatch_date', 'delivery_status', 'delivery_date']
+                  'dispatch_date', 'delivery_status', 'delivery_date', 'null_order_count']
+        read_only_fields = ['null_order_count']
         list_serializer_class = BulkCreateOrderSerializer
 
     def create(self, validated_data):
@@ -262,3 +264,22 @@ class FullPostcodeDataSerializer(serializers.Serializer):
     total_tb_sales = serializers.IntegerField()
     tb_2000_sales = serializers.IntegerField()
     tb_4000_sales = serializers.IntegerField()
+
+
+class TB2000FullDataSerializer(serializers.Serializer):
+
+    avg_customer_age = serializers.IntegerField()
+    avg_delivery_delta = serializers.CharField()
+    total_sales = serializers.IntegerField()
+
+class TB4000FullDataSerializer(serializers.Serializer):
+
+    avg_customer_age = serializers.IntegerField()
+    avg_delivery_delta = serializers.CharField()
+    total_sales = serializers.IntegerField()
+
+
+class TBSalesByAgeSerializer(serializers.Serializer):
+
+    customer_age = serializers.IntegerField()
+    total_sales = serializers.IntegerField()

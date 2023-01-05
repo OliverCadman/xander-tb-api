@@ -12,7 +12,9 @@ from orders.serializers import (
     AvgCustomerAgeSerializer,
     DeliveryDeltaSerializer,
     FullPostcodeDataSerializer,
-    CustomerAgeSerializer
+    CustomerAgeSerializer,
+    TB2000FullDataSerializer,
+    TBSalesByAgeSerializer
 )
 from core.models import (
     FullOrder,
@@ -131,9 +133,43 @@ class FullOrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False)
+    def get_full_data_by_tb_type(self, request):
+        """
+        Return comprehensive data for each
+        toothbrush type.
+        """
+
+        data_by_toothbrush = None
+        toothbrush_type = None
+
+        toothbrush_type = ' '.join(request.query_params['toothbrush_type'].split('_'))
+
+        if toothbrush_type == 'toothbrush 2000':
+            data_by_toothbrush = FullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).aggregate(
+                avg_customer_age=Avg('customer_age'),
+                avg_delivery_delta=Avg(F('delivery_date') - F('order_date')),
+                total_sales=Count('toothbrush_type')
+            )
+        else:
+            data_by_toothbrush = FullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).aggregate(
+                avg_customer_age=Avg('customer_age'),
+                avg_delivery_delta=Avg(F('delivery_date') - F('order_date')),
+                total_sales=Count('toothbrush_type')
+            )
+        
+        serializer = TB2000FullDataSerializer(data_by_toothbrush)
+
+        return Response(serializer.data)
+
+    
+    @action(detail=False)
     def get_full_data_by_postcode(self, request):
         """
-        Return a comprehensive overview of data for
+        Return a comprehensive data for
         each postcode.
         """
 
@@ -261,6 +297,34 @@ class FullOrderViewSet(viewsets.ModelViewSet):
 
         serializer = CustomerAgeSerializer(customer_age)
         return Response(serializer.data)
+    
+    @action(detail=False)
+    def get_tb_sales_by_age(self, request):
+
+        toothbrush_type = None
+        tb_sales_by_age = None
+
+        if 'toothbrush_type' in request.query_params:
+            toothbrush_type = ' '.join(request.query_params['toothbrush_type'].split('_'))
+
+            tb_sales_by_age = tb_sales_by_age = FullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).values(
+            'customer_age'
+        ).annotate(
+            total_sales=Count('toothbrush_type')
+        ).order_by('customer_age')
+        else:
+            tb_sales_by_age = FullOrder.objects.values(
+                'customer_age'
+            ).annotate(
+                total_sales=Count('toothbrush_type')
+            ).order_by('customer_age')
+
+        serializer = TBSalesByAgeSerializer(tb_sales_by_age, many=True)
+        return Response(serializer.data)
+
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -314,7 +378,6 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
             )
         elif find_max:
             max_number = queryset.aggregate(Max('order_number'))
-            print('MAX NUMBER???', max_number)
             return queryset.filter(order_number=max_number['order_number__max'])
             
         return queryset
@@ -331,6 +394,26 @@ class NullOrderViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data, status.HTTP_201_CREATED
         )
+    
+    def get_queryset(self):
+        queryset = self.queryset
+
+        toothbrush_type = None
+
+        if 'count_null_orders' in self.request.query_params:
+            print('HEYYYY')
+            if 'toothbrush_type' in self.request.query_params:
+                toothbrush_type = ' '.join(request.query_params['toothbrush_type'].split('_'))
+                queryset = NullOrder.objects.filter(
+                    toothbrush_type__iexact=toothbrush_type
+                ).aggregate(null_order_count=Count('id'))
+
+                return queryset
+        else:
+            queryset = NullOrder.objects.aggregate(null_order_count=Count('id'))
+
+        return queryset
+    
 
     def get_serializer(self, *args, **kwargs):
         if isinstance(kwargs.get("data", {}), list):
@@ -345,6 +428,28 @@ class NullOrderViewSet(viewsets.ModelViewSet):
         return Response(
             status.HTTP_204_NO_CONTENT
         )
+    
+    @action(detail=False)
+    def get_null_orders(self, request):
+        """Retrieve and return null orders."""
+
+        null_orders = None
+        toothbrush_type = None
+
+        if 'toothbrush_type' in request.query_params:
+            toothbrush_type = ' '.join(request.query_params['toothbrush_type'].split('_'))
+            null_orders = NullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).aggregate(
+                null_order_count=Count('id')
+            )
+        else:
+            toothbrush_type = NullOrder.objects.aggregate(
+                null_order_count=Count('id')
+            )
+        
+        serializer = NullOrderCountSerializer(null_orders, many=True)
+        return Response(serializer.data)
 
 
 class CountToothbrushTypesViewSet(viewsets.ModelViewSet):
