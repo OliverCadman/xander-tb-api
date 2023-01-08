@@ -283,3 +283,10 @@ class TBSalesByAgeSerializer(serializers.Serializer):
 
     customer_age = serializers.IntegerField()
     total_sales = serializers.IntegerField()
+
+
+class OrderQuantitySerializer(serializers.Serializer):
+
+    customer_age = serializers.IntegerField(required=False)
+    delivery_postcode__postcode_area = serializers.CharField(required=False)
+    order_quantity = serializers.IntegerField()

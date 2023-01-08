@@ -14,7 +14,8 @@ from orders.serializers import (
     FullPostcodeDataSerializer,
     CustomerAgeSerializer,
     TB2000FullDataSerializer,
-    TBSalesByAgeSerializer
+    TBSalesByAgeSerializer,
+    OrderQuantitySerializer
 )
 from core.models import (
     FullOrder,
@@ -269,6 +270,33 @@ class FullOrderViewSet(viewsets.ModelViewSet):
 
         serializer = AvgCustomerAgeSerializer(average_customer_age)
 
+        return Response(serializer.data)
+    
+    @action(detail=False)
+    def get_order_quantities(self, request):
+        """
+        Get order quantities by toothbrush type.
+
+        Can return order quantites in relation to customer age
+        or postcode area.
+        """
+        toothbrush_type = ' '.join(self.request.query_params['toothbrush_type'].split('_'))
+        query = None
+
+        if 'customer_age' in self.request.query_params:
+            query = FullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).values('customer_age').annotate(
+                order_quantity=Count('order_quantity')
+            ).order_by('-order_quantity')
+        else:
+            query = FullOrder.objects.filter(
+                toothbrush_type__iexact=toothbrush_type
+            ).values('delivery_postcode__postcode_area').annotate(
+                order_quantity=Count('order_quantity')
+                ).order_by('-order_quantity')
+        
+        serializer = OrderQuantitySerializer(query, many=True)
         return Response(serializer.data)
     
     @action(detail=False)
