@@ -11,7 +11,7 @@ fi
 
 # Avoid replacing these with envsubst
 
-export host = \$host
+export host=\$host
 export request_uri=\$request_uri
 
 echo "Checking for fullchain.pem"
