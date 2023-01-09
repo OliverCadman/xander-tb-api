@@ -20,7 +20,7 @@ if [ ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
     envsubst < /etc/nginx/default.conf.tpl > /etc/nginx/conf.d/default.conf
 else
     echo "SSL cert exists! Enabling HTTPS... woop woop!"
-    envsubt < /etc/nginx/default-ssl.conf.tpl > /etc/nginx/conf.d/default.conf
+    envsubst < /etc/nginx/default-ssl.conf.tpl > /etc/nginx/conf.d/default.conf
 fi
 
 nginx-debug -g 'daemon off;'
