@@ -30,7 +30,7 @@ CSRF_COOKIE_DOMAIN = ".django.xander-tb-api.co.uk"
 CSRF_COOKIE_SECURE =  True
 CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS')
+CSRF_TRUSTED_ORIGINS = ['https://django.xander-tb-api.co.uk']
 
 ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1']
 ALLOWED_HOSTS.extend(
