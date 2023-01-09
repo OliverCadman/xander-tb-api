@@ -57,7 +57,7 @@ class FullOrderSerializer(serializers.ModelSerializer):
 
     billing_postcode = BillingPostcodeSerializer(required=False)
     delivery_postcode = DeliveryPostcodeSerializer(required=False)
-    avg_customer_age = serializers.ReadOnlyField()
+    avg_customer_age = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = FullOrder
@@ -169,7 +169,7 @@ class NullOrderSerializer(serializers.ModelSerializer):
 
     delivery_postcode = DeliveryPostcodeSerializer(required=False)
     billing_postcode = BillingPostcodeSerializer(required=False)
-    null_order_count = serializers.ReadOnlyField()
+    null_order_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = NullOrder
