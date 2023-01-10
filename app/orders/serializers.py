@@ -18,8 +18,7 @@ class DeliveryPostcodeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = DeliveryPostcode
-        fields = ['id', 'postcode', 'country', 'postcode_area',
-                  'longitude', 'latitude']
+        fields = ['id', 'postcode', 'postcode_area']
         read_only_fields = ['id']
 
 
@@ -29,8 +28,7 @@ class BillingPostcodeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = BillingPostcode
-        fields = ['id', 'postcode', 'country', 'postcode_area',
-                'longitude', 'latitude']
+        fields = ['id', 'postcode', 'postcode_area']
         read_only_fields = ['id']
 
 
@@ -290,3 +288,15 @@ class OrderQuantitySerializer(serializers.Serializer):
     customer_age = serializers.IntegerField(required=False)
     delivery_postcode__postcode_area = serializers.CharField(required=False)
     order_quantity = serializers.IntegerField()
+
+
+class FullDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FullOrder
+        fields = ['tb_sales_by_age']
+
+    tb_sales_by_age = serializers.SerializerMethodField()
+
+    def get_tb_sales_by_age(self):
+        return self.customer_age.annotate()
