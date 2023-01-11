@@ -300,3 +300,15 @@ class FullDataSerializer(serializers.ModelSerializer):
 
     def get_tb_sales_by_age(self):
         return self.customer_age.annotate()
+
+
+class DeliveryStatusSerializer(serializers.Serializer):
+
+    delivery_successful = serializers.IntegerField()
+    delivery_unsuccessful = serializers.IntegerField()
+    delivery_in_transit = serializers.IntegerField()
+
+
+class TotalOrdersSerializer(serializers.Serializer):
+
+    total_orders = serializers.IntegerField()
