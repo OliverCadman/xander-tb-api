@@ -52,6 +52,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+
 class DeliveryPostcode(models.Model):
     """
     Model to represent a Delivery Postcode.

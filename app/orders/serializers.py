@@ -290,13 +290,13 @@ class OrderQuantitySerializer(serializers.Serializer):
     order_quantity = serializers.IntegerField()
 
 
-class FullDataSerializer(serializers.ModelSerializer):
+class TotalOrdersSerializer(serializers.Serializer):
 
-    class Meta:
-        model = FullOrder
-        fields = ['tb_sales_by_age']
+    total_orders = serializers.IntegerField()
 
-    tb_sales_by_age = serializers.SerializerMethodField()
 
-    def get_tb_sales_by_age(self):
-        return self.customer_age.annotate()
+class DeliveryStatusSerializer(serializers.Serializer):
+
+    delivery_successful = serializers.IntegerField()
+    delivery_unsuccessful = serializers.IntegerField()
+    delivery_in_transit = serializers.IntegerField()
