@@ -373,21 +373,37 @@ class TodaysOrderViewSet(viewsets.ModelViewSet):
         return queryset
 
     @action(methods=['GET'], detail=False)
-    def count(self, request):
+    def get_todays_order_data(self, request):
+        delivery_statuses = None
         todays_order_count = None
         toothbrush_type = None
 
         if 'toothbrush_type' in request.query_params:
-            print('YES')
             toothbrush_type = ' '.join(
                 request.query_params['toothbrush_type'].split('_'))
             todays_order_count = TodaysOrder.objects.filter(
                 toothbrush_type__iexact=toothbrush_type).count()
+            delivery_statuses = TodaysOrder.objects.filter(toothbrush_type__iexact=toothbrush_type).aggregate(
+                delivery_successful=Count('pk', filter=Q(delivery_status='Delivered')),
+                delivery_unsuccessful=Count('pk', filter=Q(delivery_status='Unsuccessful')),
+                delivery_in_transit=Count('pk', filter=Q(delivery_status='In Transit'))
+            )
+            
         else:
             todays_order_count = TodaysOrder.objects.all().count()
+            delivery_statuses = TodaysOrder.objects.aggregate(
+                delivery_successful=Count('pk', filter=Q(delivery_status='Delivered')),
+                delivery_unsuccessful=Count('pk', filter=Q(delivery_status='Unsuccessful')),
+                delivery_in_transit=Count('pk', filter=Q(delivery_status='In Transit'))
+            )
+
+        
+        delivery_status_serializer = DeliveryStatusSerializer(delivery_statuses, many=False)
+            
 
         return Response({
-            'count': todays_order_count
+            'count': todays_order_count,
+            'delivery_statuses': delivery_status_serializer.data
         })
 
     @action(methods=['DELETE'], detail=False)
