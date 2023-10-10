@@ -3,6 +3,8 @@ Django REST API to get and post toothbrush sales data
 
 Built using the Django REST Framework. Runs in a Docker container, hosted on an Amazon EC2 instance.
 
+# [ALEXANDRA TRIBE - FOLLOW THIS LINK FOR SETTING UP DOCKER ON EC2](#Deploying-On-EC2)
+
 # Deploy Locally
 
 ## Clone this project
